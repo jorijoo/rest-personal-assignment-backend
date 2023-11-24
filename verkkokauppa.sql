@@ -52,7 +52,7 @@ VALUES
     ('Miniatures', 'Sport equipment'),
     ('Bikes', 'City and MTB bikes'),
     ('Music', 'Guitars, drums and other instruments'),
-    ('Phones', 'Mobile devices for all uses');
+    ('Kuvaus', 'Kamerart ja videolaitteet');
 
 INSERT INTO 
     product (product_name, price, image_url, category, product_description, units_stored) 
