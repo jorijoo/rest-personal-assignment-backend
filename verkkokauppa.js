@@ -107,12 +107,11 @@ app.get('/personal', async (req, res) => {
 /**
  * Registers user. Supports urlencoded and multipart
  */
-app.post('/personal', upload.none(), async (req, res) => {
+/*app.post('/personal', upload.none(), async (req, res) => {
     const fname = req.body.fname;
     const lname = req.body.lname;
     const uname = req.body.username;
     const pw = req.body.pw;
-    console.log(fname, lname, uname, pw)
 
     try {
         const connection = await mysql.createConnection(conf);
