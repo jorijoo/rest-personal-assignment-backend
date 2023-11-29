@@ -1,96 +1,142 @@
-require('dotenv').config()
-const axios = require('axios');
+require("dotenv").config();
+const axios = require("axios");
 
+const mysql = require("mysql2/promise");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const cors = require("cors");
 
-const mysql = require('mysql2/promise');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt')
-const cors = require('cors');
-
-const multer = require('multer');
+const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 
-var express = require('express');
+var express = require("express");
 
 var app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
-app.use(express.static('public'));
-
+app.use(express.static("public"));
 
 const PORT = process.env.PORT;
 
 app.listen(PORT, function () {
-    console.log('Server running on port ' + PORT);
+  console.log("Server running on port " + PORT);
 });
 
 const conf = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    dateStrings: false,
-    timezone: '+00:00'
-}
-
+  host: process.env.DB_HOST,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  dateStrings: false,
+  timezone: "+00:00",
+};
 
 /**
  * Makes all public files accessible
  */
 
-app.use('/files', express.static('assets/public'));
+app.use("/files", express.static("assets/public"));
 
 /**
  * Makes product images accessible
  */
 
-app.use('/products', express.static('assets/public/products'));
+app.use("/products", express.static("assets/public/products"));
 
 /**
  * Gets the products
  * Optional category query parameter for filtering only products from that category
  */
-app.get('/products', async (req, res) => {
-    try {
-        const connection = await mysql.createConnection(conf);
+app.get("/products", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(conf);
 
-        const category = req.query.category;
+    const category = req.query.category;
 
-        const result = (category)
-        ? await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?", [category])
-        : await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product")
-        // remove
-        // if (category) {
-        //     result = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?", [category]);
-        // } else {
-        //     result = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product");
-        // }
+    const result = category
+      ? await connection.execute(
+          "SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?",
+          [category]
+        )
+      : await connection.execute(
+          "SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product"
+        );
+    // remove
+    // if (category) {
+    //     result = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?", [category]);
+    // } else {
+    //     result = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product");
+    // }
 
-        //First index in the result contains the rows in an array
-        res.json(result[0]);
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    //First index in the result contains the rows in an array
+    res.json(result[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-
 
 /**
  * Gets all the categories
  */
-app.get('/categories', async (req, res) => {
+app.get("/categories", async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(conf);
 
-    try {
-        const connection = await mysql.createConnection(conf);
+    const [rows] = await connection.execute(
+      "SELECT category_name AS categoryName, category_description AS categoryDescription FROM product_category"
+    );
 
-        const [rows] = await connection.execute("SELECT category_name AS categoryName, category_description AS categoryDescription FROM product_category");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-        res.json(rows);
+/**
+ * Gets a single product by ID
+ */
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    const id = req.params.id; // Tuotteen ID URL:sta
+    const connection = await mysql.createConnection(conf);
 
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    const [rows] = await connection.execute(
+      "SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE id = ?",
+      [id]
+    );
+
+    if (rows.length > 0) {
+      res.json(rows[0]); // Lähetä ensimmäinen rivi vastauksena
+    } else {
+      res.status(404).send("Tuotetta ei löytynyt");
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Gets the amount of itmes in stock
+ */
+
+app.post("/units_stored", async (req, res) => {
+  try {
+    const productId = req.body.productId;
+    const connection = await mysql.createConnection(conf);
+    const [rows] = await connection.execute(
+      "SELECT units_stored FROM product WHERE id = ?",
+      [productId]
+    );
+
+    if (rows.length > 0) {
+      res.json({ units_stored: rows[0].units_stored });
+    } else {
+      res.status(404).send("Tuotetta ei löytynyt");
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /*app.get('/customer', async (req, res) => {
