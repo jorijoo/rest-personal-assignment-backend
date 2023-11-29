@@ -58,14 +58,8 @@ app.get('/products', async (req, res) => {
         const category = req.query.category;
 
         const result = (category)
-        ? await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?", [category])
-        : await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product")
-        // remove
-        // if (category) {
-        //     result = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?", [category]);
-        // } else {
-        //     result = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product");
-        // }
+            ? await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE category=?", [category])
+            : await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product")
 
         //First index in the result contains the rows in an array
         res.json(result[0]);
@@ -96,11 +90,11 @@ app.get('/categories', async (req, res) => {
 app.get('/personal', async (req, res) => {
 
     //Get the bearer token from authorization header
-    const token = req.headers.authorization.split(' ')[1];
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1]
 
     //Verify the token. Verified token contains username
     try {
-        const username = jwt.verify(token, process.env.JWT_KEY).username;
+        const username = token && jwt.verify(token, process.env.JWT_KEY).username;
         const connection = await mysql.createConnection(conf);
         const [rows] = await connection.execute('SELECT first_name fname, last_name lname, username, user_permissions FROM user WHERE username=?', [username]);
         res.status(200).json(rows[0]);
@@ -113,7 +107,7 @@ app.get('/personal', async (req, res) => {
 /**
  * Registers user. Supports urlencoded and multipart
  */
-app.post('/personal', upload.none(), async (req, res) => {
+/*app.post('/personal', upload.none(), async (req, res) => {
     const fname = req.body.fname;
     const lname = req.body.lname;
     const uname = req.body.username;
@@ -185,7 +179,6 @@ app.post('/personal', upload.none(), async (req, res) => {
     }
 });
 
-
 /**
  * Place an order. 
  */
@@ -215,10 +208,6 @@ app.post('/personal', upload.none(), async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-
-//(Authentication/JWT could be done with middleware also)
-
 
 /**
  * Checks the username and password and returns jwt authentication token if authorized. 
@@ -250,7 +239,6 @@ app.post('/personal', upload.none(), async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
 
 /**
  * Gets orders of the user
