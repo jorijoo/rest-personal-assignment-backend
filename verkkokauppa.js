@@ -90,13 +90,13 @@ app.get('/categories', async (req, res) => {
 app.get('/personal', async (req, res) => {
 
     //Get the bearer token from authorization header
-    const token = req.headers.authorization && req.headers.authorization.split(' ')[1]
+    const token = authExists(req.headers.authorization);
 
     //Verify the token. Verified token contains username
     try {
         const username = token && jwt.verify(token, process.env.JWT_KEY).username;
         const connection = await mysql.createConnection(conf);
-        const [rows] = await connection.execute('SELECT first_name fname, last_name lname, username, user_permissions FROM user WHERE username=?', [username]);
+        const [rows] = await connection.execute('SELECT first_name fname, last_name lname, username FROM user WHERE username=?', [username]);
         res.status(200).json(rows[0]);
     } catch (err) {
         console.log(err.message);
@@ -243,10 +243,10 @@ app.get('/personal', async (req, res) => {
 /**
  * Gets orders of the user
  */
-/*app.get('/orders', async (req, res) => {
+/* app.get('/orders', async (req, res) => {
 
     //Get the bearer token from authorization header
-    const token = req.headers.authorization.split(' ')[1];
+    const token = authExists(req.headers.authorization);
 
     //Verify the token. Verified token contains username
     try {
@@ -285,4 +285,11 @@ async function getOrders(username) {
         res.status(500).json({ error: err.message });
     }
 }
-*/
+* /
+
+/**
+ * Check if authorization header exists
+ * @param {string} token  - authorization header
+ * @returns {string | boolean}  - token or false
+ */
+function authExists(token) { return token && token.split(' ')[1]; }
