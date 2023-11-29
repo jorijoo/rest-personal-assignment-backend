@@ -90,7 +90,7 @@ app.get('/categories', async (req, res) => {
 app.get('/personal', async (req, res) => {
 
     //Get the bearer token from authorization header
-    const token = authExists(req.headers.authorization);
+    const token = req.headers.authorization?.split(' ')[1];
 
     //Verify the token. Verified token contains username
     try {
@@ -246,7 +246,7 @@ app.get('/personal', async (req, res) => {
 /* app.get('/orders', async (req, res) => {
 
     //Get the bearer token from authorization header
-    const token = authExists(req.headers.authorization);
+    const token = req.headers.authorization?.split(' ')[1];
 
     //Verify the token. Verified token contains username
     try {
@@ -292,4 +292,3 @@ async function getOrders(username) {
  * @param {string} token  - authorization header
  * @returns {string | boolean}  - token or false
  */
-function authExists(token) { return token && token.split(' ')[1]; }
