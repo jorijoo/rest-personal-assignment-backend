@@ -96,7 +96,7 @@ app.get('/personal', async (req, res) => {
     try {
         const username = token && jwt.verify(token, process.env.JWT_KEY).username;
         const connection = await mysql.createConnection(conf);
-        const [rows] = await connection.execute('SELECT first_name fname, last_name lname, username FROM user WHERE username=?', [username]);
+        const [rows] = await connection.execute('SELECT first_name fname, last_name lname, username, user_permissions FROM user WHERE username=?', [username]);
         res.status(200).json(rows[0]);
     } catch (err) {
         console.log(err.message);
@@ -107,18 +107,19 @@ app.get('/personal', async (req, res) => {
 /**
  * Registers user. Supports urlencoded and multipart
  */
-/*app.post('/personal', upload.none(), async (req, res) => {
+app.post('/personal', upload.none(), async (req, res) => {
     const fname = req.body.fname;
     const lname = req.body.lname;
     const uname = req.body.username;
     const pw = req.body.pw;
+    console.log(fname, lname, uname, pw)
 
     try {
         const connection = await mysql.createConnection(conf);
 
         const pwHash = await bcrypt.hash(pw, 10);
 
-        const [rows] = await connection.execute('INSERT INTO user(first_name,last_name,username,pw) VALUES (?,?,?,?)', [fname, lname, uname, pwHash]);
+        const [rows] = await connection.execute('INSERT INTO user(first_name,last_name,username,pw,user_permissions) VALUES (?,?,?,?,?)', [fname, lname, uname, pwHash, 0]);
 
         res.status(200).end();
 
