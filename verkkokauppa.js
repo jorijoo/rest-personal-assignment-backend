@@ -160,7 +160,7 @@ app.get('/personal', async (req, res) => {
 
 	//Verify the token. Verified token contains username
 	try {
-		const username = token && jwt.verify(token, process.env.JWT_KEY).username;
+		const username = jwt.verify(token, process.env.JWT_KEY).username;
 		const connection = await mysql.createConnection(conf);
 		const [rows] = await connection.execute('SELECT first_name fname, last_name lname, username, user_permissions FROM user WHERE username=?', [username]);
 		res.status(200).json(rows[0]);
