@@ -159,7 +159,7 @@ app.get('/personal', async (req, res) => {
 	//Get the bearer token from authorization header
 	const token = req.headers.authorization?.split(' ')[1];
 
-	//Verify the token. Verified token contains username
+	//Verify the token. 
 	try {
 		const username = jwt.verify(token, process.env.JWT_KEY).username;
 		const connection = await mysql.createConnection(conf);
@@ -184,7 +184,7 @@ app.post('/order', async (req, res) => {
         // Autentikoi käyttäjä ja hae käyttäjän ID tokenista
         const token = req.headers.authorization?.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_KEY);
-        const customerId = decoded.userId; // Oletetaan, että token sisältää käyttäjän ID:n nimellä 'userId'
+        const customerId = decoded.userId; 
 
         connection = await mysql.createConnection(conf);
         await connection.beginTransaction();
@@ -222,16 +222,34 @@ app.get('/myorders', async (req, res) => {
         // Tarkista ja dekoodaa token
         const token = req.headers.authorization?.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_KEY);
-        const userId = decoded.userId; // 
+        const userId = decoded.userId;
 
         // Hae tilaukset tietokannasta
         const connection = await mysql.createConnection(conf);
-        const [orders] = await connection.execute("SELECT * FROM customer_order WHERE customer_id = ?", [userId]);
-        res.json(orders);
+        const [orders] = await connection.execute(`
+            SELECT customer_order.id as orderId, customer_order.order_date, 
+                   product.product_name, product.price, order_line.quantity 
+            FROM customer_order
+            JOIN order_line ON customer_order.id = order_line.order_id
+            JOIN product ON order_line.product_id = product.id
+            WHERE customer_order.customer_id = ?
+        `, [userId]);
+        
+        
+        const formattedOrders = orders.map(order => ({
+            orderId: order.orderId,
+            orderDate: order.order_date,
+            productName: order.product_name,
+            price: order.price,
+            quantity: order.quantity
+        }));
+
+        res.json(formattedOrders);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 
 
