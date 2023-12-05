@@ -127,31 +127,32 @@ app.post("/units_stored", async (req, res) => {
  * Supports urlencoded or multipart
  */
 app.post('/login', upload.none(), async (req, res) => {
-	const uname = req.body.username;
-	const pw = req.body.pw;
+    const uname = req.body.username;
+    const pw = req.body.pw;
 
+    try {
+        const connection = await mysql.createConnection(conf);
 
-	try {
-			const connection = await mysql.createConnection(conf);
+        // Hae käyttäjän ID ja hashattu salasana tietokannasta
+        const [rows] = await connection.execute('SELECT id, pw FROM user WHERE username=?', [uname]);
 
-			const [rows] = await connection.execute('SELECT pw FROM user WHERE username=?', [uname]);
-
-			if (rows.length > 0) {
-					const isAuth = await bcrypt.compare(pw, rows[0].pw);
-					if (isAuth) {
-							const token = jwt.sign({ username: uname }, process.env.JWT_KEY);
-							res.status(200).json({ jwtToken: token });
-					} else {
-							res.status(401).end('User not authorized');
-					}
-			} else {
-					res.status(404).send('User not found');
-			}
-
-	} catch (err) {
-			res.status(500).json({ error: err.message });
-	}
+        if (rows.length > 0) {
+            const isAuth = await bcrypt.compare(pw, rows[0].pw);
+            if (isAuth) {
+                // Luo token, joka sisältää sekä käyttäjänimen että ID:n
+                const token = jwt.sign({ username: uname, userId: rows[0].id }, process.env.JWT_KEY);
+                res.status(200).json({ jwtToken: token });
+            } else {
+                res.status(401).send('User not authorized');
+            }
+        } else {
+            res.status(404).send('User not found');
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
+
 
 app.get('/personal', async (req, res) => {
 
@@ -169,6 +170,52 @@ app.get('/personal', async (req, res) => {
 		res.status(403).send('Access forbidden.');
 	}
 });
+
+
+
+
+
+
+
+app.post('/order', async (req, res) => {
+    let connection;
+
+    try {
+        // Autentikoi käyttäjä ja hae käyttäjän ID tokenista
+        const token = req.headers.authorization?.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_KEY);
+        const customerId = decoded.userId; // Oletetaan, että token sisältää käyttäjän ID:n nimellä 'userId'
+
+        connection = await mysql.createConnection(conf);
+        await connection.beginTransaction();
+
+        // Lisää tilaus
+        const [info] = await connection.execute("INSERT INTO customer_order (order_date, customer_id) VALUES (NOW(), ?)", [customerId]);
+        const orderId = info.insertId;
+
+        for (const product of req.body.products) {
+            // Tarkista varastosaldo
+            const [stock] = await connection.execute("SELECT units_stored FROM product WHERE id = ?", [product.id]);
+            if (stock.length === 0 || stock[0].units_stored < product.quantity) {
+                throw new Error('Tuotetta ei ole tarpeeksi varastossa');
+            }
+
+            // Lisää tilausrivi ja päivitä varastosaldo
+            await connection.execute("INSERT INTO order_line (order_id, product_id, quantity) VALUES (?, ?, ?)", [orderId, product.id, product.quantity]);
+            await connection.execute("UPDATE product SET units_stored = units_stored - ? WHERE id = ?", [product.quantity, product.id]);
+        }
+
+        await connection.commit();
+        res.status(200).json({ orderId: orderId });
+    } catch (err) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error('Virhe käsitellessä /order -pyyntöä:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 /**
  * Registers user. Supports urlencoded and multipart
@@ -244,6 +291,10 @@ app.get('/personal', async (req, res) => {
 				res.status(500).json({ error: err.message });
 		}
 });
+
+
+
+
 
 /**
  * Place an order. 
