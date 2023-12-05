@@ -217,6 +217,24 @@ app.post('/order', async (req, res) => {
 });
 
 
+app.get('/myorders', async (req, res) => {
+    try {
+        // Tarkista ja dekoodaa token
+        const token = req.headers.authorization?.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_KEY);
+        const userId = decoded.userId; // 
+
+        // Hae tilaukset tietokannasta
+        const connection = await mysql.createConnection(conf);
+        const [orders] = await connection.execute("SELECT * FROM customer_order WHERE customer_id = ?", [userId]);
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
 /**
  * Registers user. Supports urlencoded and multipart
  */
