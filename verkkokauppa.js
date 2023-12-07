@@ -226,7 +226,7 @@ app.get('/myorders', async (req, res) => {
 
         // Haetaaan käyttäjän tilaukset
         const orders = await getUserOrders(userId);
-        res.json(orders);
+        res.status(200).json(orders);
     } catch (error) {
         // Käsittele eri virhetilanteet asianmukaisesti
         if (error.name === "JsonWebTokenError") {
