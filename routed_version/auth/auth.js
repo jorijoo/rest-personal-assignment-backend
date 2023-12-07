@@ -24,9 +24,10 @@ function auth(req,res,next){
 /**
  * Creates a JWT token containing the username. 
  */
-function createToken(username){
-    return jwt.sign({username: username}, process.env.JWT_KEY);
+function createToken(username, userId) {
+    return jwt.sign({ username: username, userId: userId }, process.env.JWT_KEY);
 }
+
 
 
 module.exports =  {auth, createToken};
