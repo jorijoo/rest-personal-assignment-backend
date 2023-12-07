@@ -224,31 +224,48 @@ app.get('/myorders', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_KEY);
         const userId = decoded.userId;
 
-        // Hae tilaukset tietokannasta
+        // Haetaaan käyttäjän tilaukset
+        const orders = await getUserOrders(userId);
+        res.json(orders);
+    } catch (error) {
+        // Käsittele eri virhetilanteet asianmukaisesti
+        if (error.name === "JsonWebTokenError") {
+            res.status(403).send('Invalid token.');
+        } else {
+            console.error(error.message);
+            res.status(500).send('Internal server error.');
+        }
+    }
+});
+
+async function getUserOrders(userId) {
+    try {
         const connection = await mysql.createConnection(conf);
         const [orders] = await connection.execute(`
-            SELECT customer_order.id as orderId, customer_order.order_date, 
-                   product.product_name, product.price, order_line.quantity 
+            SELECT customer_order.id as orderId, customer_order.order_date,
+                   product.product_name, product.price, product.image_url, product.category,
+                   order_line.quantity
             FROM customer_order
             JOIN order_line ON customer_order.id = order_line.order_id
             JOIN product ON order_line.product_id = product.id
             WHERE customer_order.customer_id = ?
         `, [userId]);
-        
-        
-        const formattedOrders = orders.map(order => ({
+
+        // tilausten muotoilu
+        return orders.map(order => ({
             orderId: order.orderId,
             orderDate: order.order_date,
             productName: order.product_name,
             price: order.price,
+            imageUrl: order.image_url,
+            category: order.category,
             quantity: order.quantity
         }));
-
-        res.json(formattedOrders);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error(error.message);
+        throw new Error('Database query failed.');
     }
-});
+}
 
 
 
