@@ -50,7 +50,7 @@ app.get("/categories", async (req, res) => {
 	try {
 		const connection = await mysql.createConnection(conf);
 
-		const [rows] = await connection.execute("SELECT category_name AS categoryName, category_description AS categoryDescription FROM product_category");
+		const [rows] = await connection.execute("SELECT category_name AS categoryName, category_description AS categoryDescription, image_url AS imageUrl FROM product_category");
 
 		res.json(rows);
 	} catch (err) {

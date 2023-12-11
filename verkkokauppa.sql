@@ -11,7 +11,8 @@ DROP TABLE IF EXISTS product_category;
 CREATE TABLE
     product_category (
         category_name VARCHAR(255) NOT NULL PRIMARY KEY,
-        category_description VARCHAR(500)
+        category_description VARCHAR(500),
+        image_url VARCHAR(255)
     );
 
 CREATE TABLE
@@ -57,16 +58,20 @@ CREATE TABLE
 INSERT INTO product_category
 VALUES (
         "Kuvaus",
-        "Kamerat ja videolaitteet"
+        "Kamerat ja videolaitteet",
+        "http://big.kapsi.fi/categories/category_camera.png"
     ), (
         "Toimisto",
-        "Tarvikkeita toimistoon"
+        "Tarvikkeita toimistoon",
+        "http://big.kapsi.fi/categories/category_tattoo.png"
     ), (
         "Sisustus",
-        "Miniatyyrejä yms."
+        "Miniatyyrejä yms.",
+        "http://big.kapsi.fi/categories/category_interior.png"
     ), (
         "Muoti",
-        "Asuja ja tarpeellisia asusteita"
+        "Asuja ja tarpeellisia asusteita",
+        "http://big.kapsi.fi/categories/category_fashion.png"
     );
 
 INSERT INTO
