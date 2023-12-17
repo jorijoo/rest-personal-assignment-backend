@@ -273,7 +273,7 @@ async function getUserOrders(userId) {
 /**
  * Registers user. Supports urlencoded and multipart
  */
-/*app.post('/personal', upload.none(), async (req, res) => {
+app.post('/personal', upload.none(), async (req, res) => {
 		const fname = req.body.fname;
 		const lname = req.body.lname;
 		const uname = req.body.username;
@@ -297,7 +297,7 @@ async function getUserOrders(userId) {
 /**
  * Adds new product categories
  */
-/*app.post('/categories', async (req, res) => {
+app.post('/categories', async (req, res) => {
 
 		const connection = await mysql.createConnection(conf);
 
@@ -352,7 +352,7 @@ async function getUserOrders(userId) {
 /**
  * Place an order. 
  */
-/*app.post('/order', async (req, res) => {
+app.post('/order', async (req, res) => {
 
 		let connection;
 
@@ -382,7 +382,7 @@ async function getUserOrders(userId) {
 /**
  * Gets orders of the user
  */
-/* app.get('/orders', async (req, res) => {
+app.get('/orders', async (req, res) => {
 
 		//Get the bearer token from authorization header
 		const token = req.headers.authorization?.split(' ')[1];
@@ -406,7 +406,7 @@ async function getOrders(username) {
 				let result = [];
 
 				for (const row of rows) {
-						const [products] = await connection.execute("SELECT id,product_name productName,price,image_url imageUrl, category, quantity  FROM product INNER JOIN order_line ON order_line.product_id = product.id WHERE order_line.order_id=?", [row.orderId]);
+						const [products] = await connection.execute("SELECT id, product_id AS productId,product_name productName,price,image_url imageUrl, category, quantity  FROM product INNER JOIN order_line ON order_line.product_id = product.id WHERE order_line.order_id=?", [row.orderId]);
 
 						let order = {
 								orderDate: row.date,
@@ -424,4 +424,3 @@ async function getOrders(username) {
 				res.status(500).json({ error: err.message });
 		}
 }
-*/
