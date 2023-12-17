@@ -309,7 +309,7 @@ app.post('/categories', async (req, res) => {
         const categories = req.body;
 
         for (const category of categories) {
-            await connection.execute("INSERT INTO product_category VALUES (?,?)", [category.categoryName, category.description]);
+            await connection.execute("INSERT INTO product_category VALUES (?,?,?)", [category.categoryName, category.description, category.imageUrl]);
         }
 
         connection.commit();
