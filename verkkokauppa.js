@@ -255,6 +255,7 @@ async function getUserOrders(userId) {
         // tilausten muotoilu
         return orders.map(order => ({
             orderId: order.orderId,
+            productId: order.orderId,
             orderDate: order.order_date,
             productName: order.product_name,
             price: order.price,
