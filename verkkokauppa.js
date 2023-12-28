@@ -326,25 +326,24 @@ app.post('/categories', async (req, res) => {
  */
 app.post('/products', async (req, res) => {
 
-        const connection = await mysql.createConnection(conf);
+    const connection = await mysql.createConnection(conf);
 
-        try {
+    try {
+        connection.beginTransaction();
+        const products = req.body;
 
-                connection.beginTransaction();
-                const products = req.body;
-
-
-                for (const product of products) {
-                        await connection.execute("INSERT INTO product (product_name, price, image_url, category, product_description, units_stored) VALUES (?,?,?,?,?,?)", [product.productName, product.price, product.imageUrl, product.category, product.productDescription, product.unitsStored]);
-                }
-
-                connection.commit();
-                res.status(200).send("Products added!");
-
-        } catch (err) {
-                connection.rollback();
-                res.status(500).json({ error: err.message });
+        for (const product of products) {
+            await connection.execute("INSERT INTO product (product_name, price, image_url, category, product_description, units_stored) VALUES (?,?,?,?,?,?)",
+                [product.productName, product.price, product.imageUrl, product.category, product.productDescription, product.unitsStored]);
         }
+
+        connection.commit();
+        res.status(200).send("Products added!");
+
+    } catch (err) {
+        connection.rollback();
+        res.status(500).json({ error: err.message });
+    }
 });
 
 
