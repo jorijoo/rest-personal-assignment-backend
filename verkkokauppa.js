@@ -88,7 +88,7 @@ app.get("/products/:id", async (req, res) => {
         const id = req.params.id; // Tuotteen ID URL:sta
         const connection = await mysql.createConnection(conf);
 
-        const [rows] = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category FROM product WHERE id = ?", [id]);
+        const [rows] = await connection.execute("SELECT id, product_name AS productName, price, units_stored AS unitsStored, product_description AS productDescription, image_url AS imageUrl, category, positive_reputation AS positiveReputation, negative_reputation AS negativeReputation FROM product WHERE id = ?", [id]);
 
         if (rows.length > 0) {
             // Lähetä ensimmäinen rivi vastauksena
@@ -102,9 +102,32 @@ app.get("/products/:id", async (req, res) => {
 });
 
 /**
+ * ------------------------------
+ * Adds reputation
+ * ------------------------------
+ */
+app.post('/reputation', async (req, res) => {
+    try {
+        const id = req.body.id
+
+        // Check if positive or negative reputation
+        const rep = (+req.body.reputation === 1)
+            ? `positive_reputation`
+            : `negative_reputation`
+        const query = `UPDATE product SET ${rep} = COALESCE(${rep}, 0) + 1 WHERE id = ?`
+
+        const con = await mysql.createConnection(conf)
+        await con.execute(query, [id])
+        res.status(200).send(`Product ${id} ${rep} updated`)
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
+
+/**
  * Gets the amount of items in stock
  */
-
 app.post("/units_stored", async (req, res) => {
     try {
         const productId = req.body.productId;
@@ -153,7 +176,6 @@ app.post('/login', upload.none(), async (req, res) => {
     }
 });
 
-
 app.get('/personal', async (req, res) => {
 
     //Get the bearer token from authorization header
@@ -170,12 +192,6 @@ app.get('/personal', async (req, res) => {
         res.status(403).send('Access forbidden.');
     }
 });
-
-
-
-
-
-
 
 app.post('/order', async (req, res) => {
     let connection;
