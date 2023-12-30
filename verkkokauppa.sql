@@ -8,6 +8,8 @@ DROP TABLE IF EXISTS product;
 
 DROP TABLE IF EXISTS product_category;
 
+DROP TABLE IF EXISTS customer_review
+
 CREATE TABLE
     product_category (
         category_name VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -61,11 +63,9 @@ CREATE TABLE
 -- Add table for customer reviews
 CREATE TABLE
     customer_review (
-        user_id INT,
+        id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
         product_id INT,
         review VARCHAR(1000),
-        PRIMARY KEY (user_id, product_id),
-        FOREIGN KEY (user_id) REFERENCES user(id),
         FOREIGN KEY (product_id) REFERENCES product(id)
     )
 

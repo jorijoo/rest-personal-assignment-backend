@@ -132,14 +132,13 @@ app.post('/reputation', async (req, res) => {
  */
 app.post('/review', async (req, res) => {
     try {
-        const userId = req.body.user
         const prodId = req.body.product
         const review = req.body.review
-        const query = `INSERT INTO customer_review (user_id, product_id, review) VALUES (?, ?, ?)`
+        const query = `INSERT INTO customer_review (product_id, review) VALUES (?, ?)`
 
         if (review) {
             const con = await mysql.createConnection(conf)
-            await con.execute(query, [userId, prodId, review])
+            await con.execute(query, [prodId, review])
             res.status(200).send('Arvostelu tallennettu')
         } else {
             res.status(400).send('Tyhjä arvostelu')
