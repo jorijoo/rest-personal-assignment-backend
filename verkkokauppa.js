@@ -153,10 +153,10 @@ app.post('/review', async (req, res) => {
  * Fetch product reviews
  * ----------------------------
  */
-app.get('/review', async (req, res) => {
+app.get('/review/:product', async (req, res) => {
     try {
-        const prodId = req.query.product
-        const query = `SELECT review FROM customer_review WHERE product_id = ?`
+        const prodId = req.params.product
+        const query = `SELECT id, review FROM customer_review WHERE product_id = ?`
         const con = await mysql.createConnection(conf)
 
         const [rows] = await con.execute(query, [prodId])
