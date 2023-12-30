@@ -119,8 +119,7 @@ app.post('/reputation', async (req, res) => {
         const con = await mysql.createConnection(conf)
         await con.execute(query, [id])
         res.status(200).send(`Product ${id} ${rep} updated`)
-    }
-    catch (err) {
+    } catch (err) {
         res.status(500).json({ error: err.message })
     }
 })
@@ -136,6 +135,7 @@ app.post('/review', async (req, res) => {
         const review = req.body.review
         const query = `INSERT INTO customer_review (product_id, review) VALUES (?, ?)`
 
+        // Check if review is empty
         if (review) {
             const con = await mysql.createConnection(conf)
             await con.execute(query, [prodId, review])
@@ -143,8 +143,30 @@ app.post('/review', async (req, res) => {
         } else {
             res.status(400).send('Tyhjä arvostelu')
         }
+    } catch (err) {
+        res.status(500).json({ error: err.message })
     }
-    catch (err) {
+})
+
+/**
+ * ----------------------------
+ * Fetch product reviews
+ * ----------------------------
+ */
+app.get('/review', async (req, res) => {
+    try {
+        const prodId = req.query.product
+        const query = `SELECT review FROM customer_review WHERE product_id = ?`
+        const con = await mysql.createConnection(conf)
+
+        const [rows] = await con.execute(query, [prodId])
+
+            if (rows.length > 0) {
+                res.json(rows)
+            } else {
+                res.status(404).send('Ei arvosteluita')
+            } 
+    } catch (err) {
         res.status(500).json({ error: err.message })
     }
 })
