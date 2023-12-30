@@ -24,6 +24,8 @@ CREATE TABLE
         category VARCHAR(255),
         product_description VARCHAR(1000),
         units_stored INT,
+        negative_reputation INT,
+        positive_reputation INT,
         FOREIGN KEY (category) REFERENCES product_category(category_name)
     );
 
@@ -54,6 +56,16 @@ CREATE TABLE
         FOREIGN KEY (order_id) REFERENCES customer_order(id),
         FOREIGN KEY (product_id) REFERENCES product(id)
     );
+
+CREATE TABLE
+    customer_review (
+        user_id INT,
+        product_id INT,
+        review VARCHAR(1000),
+        PRIMARY KEY (user_id, product_id),
+        FOREIGN KEY (user_id) REFERENCES user(id),
+        FOREIGN KEY (product_id) REFERENCES product(id)
+    )
 
 INSERT INTO product_category
 VALUES (
