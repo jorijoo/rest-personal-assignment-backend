@@ -126,6 +126,31 @@ app.post('/reputation', async (req, res) => {
 })
 
 /**
+ * --------------------------------
+ * Adds customer product review
+ * --------------------------------
+ */
+app.post('/review', async (req, res) => {
+    try {
+        const userId = req.body.user
+        const prodId = req.body.product
+        const review = req.body.review
+        const query = `INSERT INTO customer_review (user_id, product_id, review) VALUES (?, ?, ?)`
+
+        if (review) {
+            const con = await mysql.createConnection(conf)
+            await con.execute(query, [userId, prodId, review])
+            res.status(200).send('Arvostelu tallennettu')
+        } else {
+            res.status(400).send('Tyhjä arvostelu')
+        }
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
+
+/**
  * Gets the amount of items in stock
  */
 app.post("/units_stored", async (req, res) => {
