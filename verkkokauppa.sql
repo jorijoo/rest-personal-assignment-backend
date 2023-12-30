@@ -24,6 +24,7 @@ CREATE TABLE
         category VARCHAR(255),
         product_description VARCHAR(1000),
         units_stored INT,
+        -- Add reputation for positive and negative
         negative_reputation INT,
         positive_reputation INT,
         FOREIGN KEY (category) REFERENCES product_category(category_name)
@@ -57,6 +58,7 @@ CREATE TABLE
         FOREIGN KEY (product_id) REFERENCES product(id)
     );
 
+-- Add table for customer reviews
 CREATE TABLE
     customer_review (
         user_id INT,
